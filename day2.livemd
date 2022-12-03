@@ -1,0 +1,111 @@
+# Day2
+
+## Section
+
+```elixir
+path = "Projects/aoc/2022/day2.txt"
+input = File.read!(path)
+```
+
+```elixir
+defmodule RPS do
+  @moves %{
+    "A" => :rock,
+    "B" => :paper,
+    "C" => :scissors,
+    "X" => :rock,
+    "Y" => :paper,
+    "Z" => :scissors
+  }
+  @scores %{rock: 1, paper: 2, scissors: 3}
+  def run(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.reduce(0, fn x, acc ->
+      l = String.split(x)
+      calculate_pts(l) + acc
+    end)
+  end
+
+  def calculate_pts([h, t]) do
+    alien_move = Map.get(@moves, h)
+    you_move = Map.get(@moves, t)
+    score = Map.get(@scores, you_move)
+
+    case play(alien_move, you_move) do
+      :win -> score + 6
+      :draw -> score + 3
+      :lose -> score + 0
+    end
+  end
+
+  def play(a, b) when a == b, do: :draw
+  def play(:rock, :paper), do: :win
+  def play(:rock, :scissors), do: :lose
+  def play(:paper, :scissors), do: :win
+  def play(:paper, :rock), do: :lose
+  def play(:scissors, :rock), do: :win
+  def play(:scissors, :paper), do: :lose
+end
+
+RPS.run(input)
+```
+
+## Day2
+
+```elixir
+defmodule RPS do
+  @moves %{"A" => :rock, "B" => :paper, "C" => :scissors, "X" => :lose, "Y" => :draw, "Z" => :win}
+  @scores %{rock: 1, paper: 2, scissors: 3}
+
+  def run(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.reduce(0, fn x, acc ->
+      l = String.split(x)
+      calculate_pts(l) + acc
+    end)
+  end
+
+  def calculate_pts([h, t]) do
+    alien_move = Map.get(@moves, h)
+    desired_outcome = Map.get(@moves, t)
+    you_move = determine_play(alien_move, desired_outcome)
+    score = Map.get(@scores, you_move)
+
+    case play(alien_move, you_move) do
+      :win -> score + 6
+      :draw -> score + 3
+      :lose -> score + 0
+    end
+  end
+
+  def determine_play(alien, :win) do
+    case alien do
+      :rock -> :paper
+      :paper -> :scissors
+      :scissors -> :rock
+    end
+  end
+
+  def determine_play(alien, :lose) do
+    case alien do
+      :rock -> :scissors
+      :paper -> :rock
+      :scissors -> :paper
+    end
+  end
+
+  def determine_play(alien, :draw), do: alien
+
+  def play(a, b) when a == b, do: :draw
+  def play(:rock, :paper), do: :win
+  def play(:rock, :scissors), do: :lose
+  def play(:paper, :rock), do: :lose
+  def play(:paper, :scissors), do: :win
+  def play(:scissors, :rock), do: :win
+  def play(:scissors, :paper), do: :lose
+end
+
+RPS.run(input)
+```
