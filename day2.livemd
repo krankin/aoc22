@@ -1,6 +1,6 @@
 # Day2
 
-## Section
+## Part 1
 
 ```elixir
 path = "Projects/aoc/2022/day2.txt"
@@ -51,7 +51,7 @@ end
 RPS.run(input)
 ```
 
-## Day2
+## Part 2
 
 ```elixir
 defmodule RPS do
