@@ -1,0 +1,60 @@
+# Day 3
+
+## Section
+
+```elixir
+path = "Projects/aoc/2022/day3.txt"
+input = File.read!(path)
+
+defmodule Day3 do
+  def part1(input) do
+    input
+    |> String.split()
+    |> Enum.map(fn x ->
+      {l1, l2} = String.split_at(x, div(String.length(x), 2))
+
+      String.codepoints(l1)
+      |> Enum.reject(fn x ->
+        !String.contains?(l2, x)
+      end)
+      |> Enum.uniq()
+    end)
+    |> List.flatten()
+    |> Enum.reduce(0, fn x, acc ->
+      acc + (x |> String.to_charlist() |> hd |> calc_pts)
+    end)
+  end
+
+  def part2(input) do
+    input
+    |> String.split()
+    |> Enum.chunk_every(3)
+    |> Enum.map(fn [x, y, z] = l ->
+      (x <> y <> z)
+      |> String.codepoints()
+      |> Enum.uniq()
+      |> Enum.sort()
+      |> Enum.filter(fn c ->
+        Enum.all?(l, fn x ->
+          String.contains?(x, c)
+        end)
+      end)
+    end)
+    |> List.flatten()
+    |> Enum.reduce(0, fn x, acc ->
+      acc + (x |> String.to_charlist() |> hd |> calc_pts)
+    end)
+  end
+
+  def calc_pts(char) when char in ?a..?z do
+    char - 96
+  end
+
+  def calc_pts(char) when char in ?A..?Z do
+    char - 38
+  end
+end
+
+Day3.part1(input)
+Day3.part2(input)
+```
