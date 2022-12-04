@@ -1,0 +1,65 @@
+# Day 4
+
+## Section
+
+```elixir
+test_input = """
+2-4,6-8
+2-3,4-5
+5-7,7-9
+2-8,3-7
+6-6,4-6
+2-6,4-8
+"""
+
+path = "Projects/aoc/2022/day4.txt"
+input = File.read!(path)
+```
+
+## Part 1
+
+```elixir
+defmodule Day4 do
+  def part1(input) do
+    prep_input(input)
+    |> Enum.filter(fn pairs ->
+      contains?(pairs)
+    end)
+    |> Enum.count()
+  end
+
+  def part2(input) do
+    prep_input(input)
+    |> Enum.filter(fn pairs ->
+      overlap?(pairs)
+    end)
+    |> Enum.count()
+  end
+
+  def prep_input(input) do
+    input
+    |> String.split()
+    |> Enum.map(fn x ->
+      x
+      |> String.split(",")
+      |> Enum.flat_map(fn y ->
+        y
+        |> String.split("-")
+        |> Enum.map(&String.to_integer(&1))
+      end)
+    end)
+  end
+
+  def contains?([p1, p2, p3, p4]) when p1 >= p3 and p2 <= p4, do: true
+  def contains?([p1, p2, p3, p4]) when p3 >= p1 and p4 <= p2, do: true
+  def contains?(_), do: false
+
+  def overlap?([p1, _, p3, p4]) when p1 >= p3 and p1 <= p4, do: true
+  def overlap?([_, p2, p3, p4]) when p2 >= p3 and p2 <= p4, do: true
+  def overlap?([p1, p2, p3, _]) when p3 >= p1 and p3 <= p2, do: true
+  def overlap?([p1, p2, _, p4]) when p4 >= p1 and p4 <= p2, do: true
+  def overlap?(_), do: false
+end
+
+Day4.part2(input)
+```
