@@ -1,0 +1,119 @@
+# Day 5
+
+## Section
+
+```elixir
+test_input = """
+    [D]    
+[N] [C]    
+[Z] [M] [P]
+ 1   2   3 
+
+move 1 from 2 to 1
+move 3 from 1 to 3
+move 2 from 2 to 1
+move 1 from 1 to 2
+"""
+
+path = "Projects/aoc/2022/day5.txt"
+input = File.read!(path)
+```
+
+## Part 1
+
+```elixir
+defmodule Day5 do
+  def part1(input) do
+    {stacks, moves} =
+      input
+      |> String.split("\n", trim: true)
+      |> Enum.split_while(fn x -> !String.contains?(x, "move") end)
+
+    stacks
+    |> load_stack()
+    |> process(moves)
+    |> output()
+  end
+
+  def part2(input) do
+    {stacks, moves} =
+      input
+      |> String.split("\n", trim: true)
+      |> Enum.split_while(fn x -> !String.contains?(x, "move") end)
+
+    stacks
+    |> load_stack()
+    |> process_9001(moves)
+    |> output()
+  end
+
+  def output(mp) do
+    Map.values(mp)
+    |> Enum.reduce('', fn [h | x], acc ->
+      acc ++ h
+    end)
+  end
+
+  def process_9001(stack, moves) do
+    Enum.reduce(moves, stack, fn move, acc ->
+      [_a, amnt, _b, from, _c, to] = String.split(move)
+
+      {to_move, remaining} =
+        Map.get(acc, String.to_integer(from)) |> Enum.split(String.to_integer(amnt))
+
+      acc = Map.put(acc, String.to_integer(from), remaining)
+      col = Map.get(acc, String.to_integer(to))
+      Map.put(acc, String.to_integer(to), to_move |> Kernel.++(col))
+    end)
+  end
+
+  def process(stack, moves) do
+    Enum.reduce(moves, stack, fn move, acc ->
+      [_a, amnt, _b, from, _c, to] = String.split(move)
+
+      {to_move, remaining} =
+        Map.get(acc, String.to_integer(from)) |> Enum.split(String.to_integer(amnt))
+
+      acc = Map.put(acc, String.to_integer(from), remaining)
+      col = Map.get(acc, String.to_integer(to))
+      Map.put(acc, String.to_integer(to), to_move |> Enum.reverse() |> Kernel.++(col))
+    end)
+  end
+
+  def parse_move(move) do
+    String.split(move)
+  end
+
+  def parse_stack(x) do
+    x
+    |> String.to_charlist()
+    |> Enum.with_index(0)
+    |> Enum.filter(fn {x, _idx} ->
+      x >= 65 && x <= 90
+    end)
+    |> Enum.map(fn {x, idx} ->
+      {x, div(idx, 4) + 1}
+    end)
+  end
+
+  def load_stack(stacks) do
+    stacks
+    |> Enum.map(&parse_stack(&1))
+    |> Enum.filter(fn x -> x != [] end)
+    |> Enum.reverse()
+    |> Enum.reduce(%{}, fn x, acc ->
+      load_map(x, acc)
+    end)
+  end
+
+  def load_map([], acc), do: acc
+
+  def load_map([{crate, column} | t], acc) do
+    col = Map.get(acc, column, [])
+    load_map(t, Map.put(acc, column, [[crate] | col]))
+  end
+end
+
+# Day5.part1(input)
+Day5.part2(input)
+```
