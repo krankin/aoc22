@@ -1,0 +1,112 @@
+# Day 7
+
+```elixir
+Mix.install([
+  {:kino, "~> 0.8.0"}
+])
+```
+
+## Part 1
+
+```elixir
+test_input = """
+$ cd /
+$ ls
+dir a
+14848514 b.txt
+8504156 c.dat
+dir d
+$ cd a
+$ ls
+dir e
+29116 f
+2557 g
+62596 h.lst
+$ cd e
+$ ls
+584 i
+$ cd ..
+$ cd ..
+$ cd d
+$ ls
+4060174 j
+8033020 d.log
+5626152 d.ext
+7214296 k
+$ cd ..
+$ cd p
+$ cd q
+$ cd p
+500001 file.txt
+"""
+```
+
+```elixir
+defmodule Day7 do
+  def part1(input) do
+    input
+    |> traverse()
+    |> Enum.filter(fn {_, v} ->
+      is_integer(v) and v < 100_000
+    end)
+    |> Keyword.values()
+    |> Enum.sum()
+  end
+
+  @needed 70_000_000 - 30_000_000
+
+  def part2(input) do
+    result = input |> traverse()
+
+    result
+    |> Enum.filter(fn {_, v} ->
+      is_integer(v) and v > result["/"] - @needed
+    end)
+    |> Keyword.values()
+    |> Enum.sort()
+    |> hd()
+  end
+
+  def traverse(input) do
+    input
+    |> String.split("\n", trim: true)
+    |> Enum.reduce(%{current_dir: [], files: %{}}, fn x, state ->
+      parse_command(x, state)
+    end)
+  end
+
+  def parse_command("$ cd /", state) do
+    Map.put(state, :current_dir, ["/"])
+  end
+
+  def parse_command("$ cd ..", state) do
+    [_ | rest] = Map.get(state, :current_dir, [])
+    Map.put(state, :current_dir, rest)
+  end
+
+  def parse_command("$ cd " <> dir, state) do
+    [h | _] = l = Map.get(state, :current_dir, [])
+    new_path = h <> "/" <> dir
+    Map.put(state, :current_dir, [new_path | l])
+  end
+
+  def parse_command("$ ls" <> _, y), do: y
+
+  def parse_command("dir " <> _, y), do: y
+
+  def parse_command(x, y) do
+    [size, _] = String.split(x)
+
+    y.current_dir
+    |> Enum.reduce(y, fn current_dir, acc ->
+      Map.update(acc, current_dir, String.to_integer(size), &(&1 + String.to_integer(size)))
+    end)
+  end
+end
+
+path = "Projects/aoc/2022/day7.txt"
+input = File.read!(path)
+
+IO.inspect(Day7.part1(input))
+Day7.part2(input)
+```
