@@ -1,0 +1,180 @@
+# Untitled notebook
+
+## Section
+
+```elixir
+test_input = """
+30373
+25512
+65332
+33549
+35390
+"""
+```
+
+```elixir
+defmodule Day8 do
+  def run(input) do
+    rows = input |> String.split()
+
+    size = Enum.count(rows)
+
+    rows
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {str, row} ->
+      trees = str |> String.graphemes()
+
+      trees
+      |> Enum.with_index()
+      |> Enum.map(fn {tree_height, col} ->
+        {{col, row}, {String.to_integer(tree_height), is_edge(size, row, col)}}
+      end)
+    end)
+    |> Map.new()
+    |> count_visibility(size)
+  end
+
+  def run2(input) do
+    rows = input |> String.split()
+
+    num_y = Enum.count(rows)
+    num_x = List.first(rows) |> String.graphemes() |> Enum.count()
+
+    rows
+    |> Enum.with_index()
+    |> Enum.flat_map(fn {str, y} ->
+      trees = str |> String.graphemes()
+
+      trees
+      |> Enum.with_index()
+      |> Enum.map(fn {tree_height, x} ->
+        {{x, y}, String.to_integer(tree_height)}
+      end)
+    end)
+    |> Map.new()
+    |> find_scenic(num_x, num_y)
+  end
+
+  def find_scenic(m, max_rows, max_cols) do
+    Enum.reduce(m, 0, fn {{x, y}, _} = tree, acc ->
+      # get tree coords left, right, up, down
+      left =
+        for l <- (x - 1)..0 do
+          {l, y}
+        end
+
+      right =
+        for l <- (x + 1)..max_cols do
+          {l, y}
+        end
+
+      up =
+        for l <- (y - 1)..0 do
+          {x, l}
+        end
+
+      down =
+        for l <- (y + 1)..max_rows do
+          {x, l}
+        end
+
+      # count in each direction
+      left = process_vis(m, left, tree)
+      right = process_vis(m, right, tree)
+      up = process_vis(m, up, tree)
+      down = process_vis(m, down, tree)
+
+      result = left * right * up * down
+
+      if(result > acc) do
+        result
+      else
+        acc
+      end
+    end)
+  end
+
+  def process_vis(map, list_of_coords, {{x, y}, h}) do
+    {ct, _} =
+      list_of_coords
+      |> Enum.reduce({0, false}, fn {px, py}, {count, break} ->
+        if({x, y} == {px, py} || break) do
+          {count, true}
+        else
+          tree_height = Map.get(map, {px, py})
+
+          case(tree_height) do
+            # generated a coord not in our map
+            nil -> {count, break}
+            x when x < h -> {count + 1, break}
+            _ -> {count + 1, true}
+          end
+        end
+      end)
+
+    ct
+  end
+
+  def count_visibility(m, max) do
+    m
+    |> Enum.reduce(0, fn {{x, y}, {height, already_visible}}, acc ->
+      if already_visible do
+        acc + 1
+      else
+        up_coords =
+          for up <- 0..(x - 1) do
+            {up, y}
+          end
+
+        down_coords =
+          for down <- (x + 1)..max do
+            {down, y}
+          end
+
+        left_coords =
+          for l <- 0..(y - 1) do
+            {x, l}
+          end
+
+        right_coords =
+          for r <- (y + 1)..max do
+            {x, r}
+          end
+
+        u =
+          Map.take(m, up_coords)
+          |> Enum.all?(fn {_, {h, _}} -> h < height end)
+
+        d =
+          Map.take(m, down_coords)
+          |> Enum.all?(fn {_, {h, _}} -> h < height end)
+
+        left =
+          Map.take(m, left_coords)
+          |> Enum.all?(fn {_, {h, _}} -> h < height end)
+
+        right =
+          Map.take(m, right_coords)
+          |> Enum.all?(fn {_, {h, _}} -> h < height end)
+
+        if u or d or left or right do
+          acc + 1
+        else
+          acc
+        end
+      end
+    end)
+  end
+
+  def is_edge(_, row, _) when row == 0, do: true
+  def is_edge(_, _, col) when col == 0, do: true
+  def is_edge(max, _, col) when col == max - 1, do: true
+  def is_edge(max, row, _) when row == max - 1, do: true
+  def is_edge(_, _, _), do: false
+end
+
+path = "Projects/aoc/2022/day8.txt"
+input = File.read!(path)
+Day8.run(input) |> IO.inspect()
+Day8.run2(input)
+```
